@@ -1,4 +1,8 @@
+"use client";
+
 import { MobileLayout } from "@/components/layout/MobileLayout";
+import { useState } from "react";
+import { signOut } from "next-auth/react";
 
 const avatars = [1, 2, 3, 4];
 
@@ -11,13 +15,14 @@ export default function ProfilePage() {
             <div className="h-20 w-20 shrink-0 rounded-full bg-[#D9D9D9]" />
             <div>
               <p className="text-[22px] leading-tight text-[#031B77]">
-                Hello, <span className="font-bold">Satya!</span>
+                Hello, <span className="font-bold">User!</span>
               </p>
               <p className="mt-1 text-[16px] font-bold text-[#031B77]">Current streak: 1</p>
             </div>
           </div>
         </section>
 
+        <p>Fitur ini masih dalam pengembangan</p>
         <h2 className="mt-8 text-[22px] font-bold text-[#031B77]">Change profile</h2>
 
         <div className="mt-5 grid grid-cols-[1.2fr_1fr] gap-4">
@@ -37,6 +42,14 @@ export default function ProfilePage() {
               className="mt-8 h-[38px] w-full rounded-[8px] bg-[#0077B6] text-[18px] font-medium text-white transition-colors hover:bg-[#056da6]"
             >
               Save
+            </button>
+
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              type="button"
+              className="mt-3 h-[36px] w-full rounded-[8px] bg-[#E53E3E] text-[16px] font-medium text-white transition-colors hover:bg-[#cc2f2f]"
+            >
+              Logout
             </button>
           </div>
 
