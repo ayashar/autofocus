@@ -40,7 +40,7 @@ export default function FocusPage() {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full min-h-screen overflow-hidden">
       <Background />
       <FocusContainer>
 

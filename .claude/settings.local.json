@@ -28,7 +28,8 @@
       "Bash(convert \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" -scale 1x1 -format \"%[hex:u]\\\\n\" info:)",
       "mcp__figma__get_design_context",
       "Bash(identify \"C:\\\\Users\\\\Satya\\\\Downloads\\\\Dashboard Utama.png\")",
-      "Bash(python -c ':*)"
+      "Bash(python -c ':*)",
+      "Bash(curl -s http://localhost:3000/focus)"
     ]
   }
 }

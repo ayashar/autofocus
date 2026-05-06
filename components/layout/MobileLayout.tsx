@@ -1,5 +1,5 @@
-import { Header } from "@/components/ui/Header";
-import { Navbar } from "@/components/ui/Navbar";
+import { Header } from "@/components/ui/header";
+import { Navbar } from "@/components/ui/navbar";
 
 export function MobileLayout({
   children,

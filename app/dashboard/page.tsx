@@ -1,5 +1,5 @@
 import Background from '@/components/Background';
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
@@ -29,7 +29,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Footer */}
-      <Footer activeIndex={1} />
+      {/* <Footer activeIndex={1} /> */}
     </div>
   );
 }

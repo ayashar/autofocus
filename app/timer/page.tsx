@@ -4,7 +4,7 @@ import { useState } from 'react';
 import TimerCard from '@/components/TimerCard';
 import StartButton from '@/components/StartButton';
 import { MobileLayout } from '@/components/layout/MobileLayout';
-import { Header } from '@/components/ui/Header';
+import { Header } from '@/components/ui/header';
 
 const timerOptions = [
   { id: 'focus', tier: '1', focusTime: '00:03:00', breakTime: '00:02:00' },
@@ -45,6 +45,6 @@ export default function Timer() {
         {/* Start Button */}
         <StartButton />
       </div>
-    </MobileLayout>
+    </div>
   );
 }
