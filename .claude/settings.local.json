@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(pnpm dev:*)",
+      "Bash(curl -s http://localhost:3001/login)",
+      "Bash(curl -v http://localhost:3001/login)",
+      "Bash(curl -s http://localhost:3000/login)",
+      "Bash(taskkill /PID 7336 /F)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //PID 7336 //F)",
+      "Bash(curl -s http://localhost:3000/_next/static/chunks/app_globals_0jn8.0u.css)",
+      "Bash(pnpm build:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm start:*)",
+      "Bash(curl -s http://localhost:3000/_next/static/chunks/0.~38a54mwfjr.css)",
+      "Bash(curl -s http://localhost:3000/dashboard)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(rm -rf C:/Users/Satya/Desktop/autofocus/.next)",
+      "Bash(wc -l app/*)",
+      "Bash(awk 'NR>=1 && NR<=200' \"C:/Users/Satya/Downloads/Autofocus UI_UX Design/Pages/Set Timer.svg\")",
+      "Bash(awk NR>=17 && NR<=32:*)",
+      "Bash(node:*)",
+      "WebFetch(domain:minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com)",
+      "Bash(curl -s -o \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" \"https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/ccv2%2F2026-05-06%2FMiniMax-M2.7%2F2036159561534018349%2Fda44223c23454370cccac245707e04a32713fecd7e1ba29814c444973331e445..png?Expires=1778100935&OSSAccessKeyId=LTAI5tCpJNKCf5EkQHSuL9xg&Signature=B2qx%2FUVmwE%2FD6x6Yc77egxBJLCs%3D\")",
+      "Bash(magick \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" -format \"%[hex:u]\" info:-)",
+      "Bash(convert \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" -scale 1x1 -format \"%[hex:u]\\\\n\" info:)",
+      "mcp__figma__get_design_context"
+    ]
+  }
+}
