@@ -65,6 +65,8 @@ export default function Home() {
 
           {error && <div className="text-sm text-red-600">{error}</div>}
 
+          <p className="text-[10px] text-center">Login bersifat dummy, tidak perlu mendaftar silakan langsung klik tombol di bawah</p>
+
           <button
             disabled={loading}
             type="submit"
