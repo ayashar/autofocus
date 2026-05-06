@@ -16,11 +16,11 @@ export default function TimerCard({
   return (
     <button
       onClick={onClick}
-      className={`w-[398px] h-[85px] rounded-[12px] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] ${isSelected ? 'bg-[#60C8FF]' : 'bg-[#0077B6]'}`}
+      className={`w-full h-[85px] px-4 rounded-[12px] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] ${isSelected ? 'bg-primary-300' : 'bg-primary-100'}`}
     >
       <div className="flex items-center justify-around h-full">
         {/* Tier Section */}
-        <div className="flex items-center pl-10">
+        <div className="flex items-center">
           <span className="text-[20px] font-bold text-white ml-2">
             Tier
           </span>
@@ -36,7 +36,7 @@ export default function TimerCard({
         <div className="w-[1px] h-[48px] mx-3 bg-white/30" />
 
         {/* Focus Timer Section */}
-        <div className="flex flex-col  items-center">
+        <div className="flex flex-col items-center flex-1">
           <span className="text-[10px] font-medium tracking-[0.1em] text-white mb-1">
             Focus Time
           </span>

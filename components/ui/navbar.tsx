@@ -8,16 +8,16 @@ export function Navbar() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: "Profile", href: "/profile", icon: User },
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Set timer", href: "/timer", icon: Clock },
+    { name: "Profile", href: "/profile", icon: User },
   ];
 
   return (
     <nav className="bg-primary-200 w-full h-[84px] shrink-0 flex items-center justify-around px-4 pb-4 pt-2">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
-        
+
         return (
           <Link
             key={item.name}

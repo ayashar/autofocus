@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import TimerCard from '@/components/TimerCard';
 import StartButton from '@/components/StartButton';
+import { MobileLayout } from '@/components/layout/MobileLayout';
+import { Header } from '@/components/ui/Header';
 
 const timerOptions = [
   { id: 'focus', tier: '1', focusTime: '00:03:00', breakTime: '00:02:00' },
@@ -20,7 +20,7 @@ export default function Timer() {
     <div className="w-full h-full bg-white">
       {/* Header - spans to top of screen */}
       <div className="absolute top-0 left-0 right-0 overflow-hidden bg-[#33A5E1] z-10">
-        <div className="h-21.5" />
+        <div className="h-[86px]" />
       </div>
 
       {/* Main Content */}
@@ -45,9 +45,6 @@ export default function Timer() {
         {/* Start Button */}
         <StartButton />
       </div>
-
-      {/* Footer */}
-      <Footer activeIndex={1} />
-    </div>
+    </MobileLayout>
   );
 }

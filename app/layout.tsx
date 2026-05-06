@@ -14,11 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="mobile-wrapper">
-          <div className="mobile-container">
-            {children}
-          </div>
-        </div>
+        {children}
       </body>
     </html>
   );
