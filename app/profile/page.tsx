@@ -1,0 +1,60 @@
+import { MobileLayout } from "@/components/layout/MobileLayout";
+
+const avatars = [1, 2, 3, 4];
+
+export default function ProfilePage() {
+  return (
+    <MobileLayout title="Profile">
+      <div className="mx-auto w-full max-w-[390px] pb-6 pt-5">
+        <section className="rounded-[24px] bg-[#CFEFFF] px-4 py-4">
+          <div className="flex items-center gap-4">
+            <div className="h-20 w-20 shrink-0 rounded-full bg-[#D9D9D9]" />
+            <div>
+              <p className="text-[22px] leading-tight text-[#031B77]">
+                Hello, <span className="font-bold">Satya!</span>
+              </p>
+              <p className="mt-1 text-[16px] font-bold text-[#031B77]">Current streak: 1</p>
+            </div>
+          </div>
+        </section>
+
+        <h2 className="mt-8 text-[22px] font-bold text-[#031B77]">Change profile</h2>
+
+        <div className="mt-5 grid grid-cols-[1.2fr_1fr] gap-4">
+          <div>
+            <label className="text-[16px] text-[#111827]" htmlFor="profile-username">
+              Username
+            </label>
+            <input
+              id="profile-username"
+              type="text"
+              placeholder="username"
+              className="mt-2 h-10 w-full rounded-[9px] border border-[#A3ADC2] px-3 text-[15px] text-[#0F172A] outline-none placeholder:text-[#A3ADC2] focus:border-[#0077B6] focus:ring-2 focus:ring-[#CAF0F8]"
+            />
+
+            <button
+              type="button"
+              className="mt-8 h-[38px] w-full rounded-[8px] bg-[#0077B6] text-[18px] font-medium text-white transition-colors hover:bg-[#056da6]"
+            >
+              Save
+            </button>
+          </div>
+
+          <div>
+            <p className="text-[16px] text-[#111827]">Profile Picture</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {avatars.map((avatar) => (
+                <button
+                  key={avatar}
+                  type="button"
+                  className="aspect-square rounded-[4px] bg-[#D9D9D9] transition-transform active:scale-95"
+                  aria-label={`Choose profile avatar ${avatar}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </MobileLayout>
+  );
+}

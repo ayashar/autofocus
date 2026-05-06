@@ -1,0 +1,60 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+
+const avatars = [1, 2, 3, 4];
+
+export default function FocusPage() {
+  return (
+    <main className="min-h-screen w-full bg-white px-6 py-8">
+      <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col">
+        <Link
+          href="/register"
+          className="inline-flex w-fit items-center gap-2 rounded-[8px] bg-[#0B88C5] px-5 py-2 text-[18px] text-white shadow-sm transition-colors hover:bg-[#0a7bb5]"
+        >
+          <ChevronLeft size={24} strokeWidth={2.3} />
+          Back
+        </Link>
+
+        <section className="mt-16 text-center">
+          <h1 className="text-[68px] font-black leading-none tracking-[-0.06em] text-[#031B77]">
+            AutoFocus
+          </h1>
+          <p className="mt-1 text-[18px] text-[#8FA0C2]">Stop scrolling. Start Focusing.</p>
+        </section>
+
+        <section className="mt-20">
+          <label className="block text-center text-[17px] text-[#111827]" htmlFor="username">
+            What should we call you?
+          </label>
+          <input
+            id="username"
+            type="text"
+            placeholder="username"
+            className="mt-3 h-10 w-full rounded-[9px] border border-[#A3ADC2] px-3 text-[15px] text-[#0F172A] outline-none placeholder:text-[#A3ADC2] focus:border-[#0077B6] focus:ring-2 focus:ring-[#CAF0F8]"
+          />
+        </section>
+
+        <section className="mt-8">
+          <p className="text-center text-[17px] text-[#111827]">Choose your profile picture</p>
+          <div className="mt-4 grid grid-cols-4 gap-3">
+            {avatars.map((avatar) => (
+              <button
+                key={avatar}
+                type="button"
+                className="aspect-square rounded-[4px] bg-[#D9D9D9] transition-transform active:scale-95"
+                aria-label={`Choose profile avatar ${avatar}`}
+              />
+            ))}
+          </div>
+        </section>
+
+        <button
+          type="button"
+          className="mt-8 h-[48px] w-full rounded-[10px] bg-[#0077B6] text-[18px] font-medium text-white transition-colors hover:bg-[#056da6]"
+        >
+          Log In
+        </button>
+      </div>
+    </main>
+  );
+}
