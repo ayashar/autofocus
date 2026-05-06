@@ -17,7 +17,7 @@ export default function Timer() {
   const [selected, setSelected] = useState<string>('focus');
 
   return (
-    <div className="relative w-full h-full bg-white">
+    <div className="w-full h-full bg-white">
       {/* Header - spans to top of screen */}
       <div className="absolute top-0 left-0 right-0 overflow-hidden bg-[#33A5E1] z-10">
         <div className="h-[86px]" />
