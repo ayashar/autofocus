@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         targetDuration,
         blockedApps: {
           deleteMany: {},
-          create: blockedApps.map((app: any) => ({
+          create: blockedApps.map((app: { name: string; packageName: string }) => ({
             name: app.name,
             packageName: app.packageName,
           })),
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         userId,
         targetDuration,
         blockedApps: {
-          create: blockedApps.map((app: any) => ({
+          create: blockedApps.map((app: { name: string; packageName: string }) => ({
             name: app.name,
             packageName: app.packageName,
           })),
@@ -103,7 +103,7 @@ export async function PATCH(request: NextRequest) {
         targetDuration,
         blockedApps: {
           deleteMany: {},
-          create: blockedApps.map((app: any) => ({
+          create: blockedApps.map((app: { name: string; packageName: string }) => ({
             name: app.name,
             packageName: app.packageName,
           })),
