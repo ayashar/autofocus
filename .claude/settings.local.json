@@ -26,7 +26,9 @@
       "Bash(curl -s -o \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" \"https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/ccv2%2F2026-05-06%2FMiniMax-M2.7%2F2036159561534018349%2Fda44223c23454370cccac245707e04a32713fecd7e1ba29814c444973331e445..png?Expires=1778100935&OSSAccessKeyId=LTAI5tCpJNKCf5EkQHSuL9xg&Signature=B2qx%2FUVmwE%2FD6x6Yc77egxBJLCs%3D\")",
       "Bash(magick \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" -format \"%[hex:u]\" info:-)",
       "Bash(convert \"C:\\\\Users\\\\Satya\\\\Desktop\\\\autofocus\\\\temp_card_ref2.png\" -scale 1x1 -format \"%[hex:u]\\\\n\" info:)",
-      "mcp__figma__get_design_context"
+      "mcp__figma__get_design_context",
+      "Bash(identify \"C:\\\\Users\\\\Satya\\\\Downloads\\\\Dashboard Utama.png\")",
+      "Bash(python -c ':*)"
     ]
   }
 }
