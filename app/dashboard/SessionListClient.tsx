@@ -3,6 +3,21 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+function formatTime(totalSeconds: number) {
+  const safeSeconds = Math.max(0, totalSeconds);
+  const hours = Math.floor(safeSeconds / 3600);
+  const mins = Math.floor((safeSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, '0');
+  const secs = Math.floor(safeSeconds % 60)
+    .toString()
+    .padStart(2, '0');
+  if (hours > 0) {
+    return `${hours}:${mins}:${secs}`;
+  }
+  return `${mins}:${secs}`;
+}
+
 type Session = {
   id: string;
   createdAt: string;
@@ -16,8 +31,18 @@ export default function SessionListClient() {
   const userId = search?.get("userId");
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [localSessions, setLocalSessions] = useState<Session[]>([]);
   const [streak, setStreak] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("autofocus_past_sessions");
+      if (stored) {
+        setLocalSessions(JSON.parse(stored));
+      }
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -51,7 +76,7 @@ export default function SessionListClient() {
     { id: "s4", createdAt: new Date().toISOString(), targetDuration: 1500, actualDuration: 1500, _count: { distractions: 0 } },
   ];
 
-  const dataToRender = userId ? sessions : sample;
+  const dataToRender = [...localSessions, ...(userId ? sessions : sample)];
 
   return (
     <div>
@@ -80,7 +105,7 @@ export default function SessionListClient() {
 
                 <div className="flex-1 border-l border-white/30 pl-4">
                   <div className="text-[13px] text-white/90">Time focused:</div>
-                  <div className="mt-1 text-[16px] font-bold">{minutes} minutes</div>
+                  <div className="mt-1 text-[16px] font-bold">{formatTime((s.actualDuration ?? s.targetDuration) || 0)}</div>
                   <div className="mt-2 text-[13px] text-white/90">Almost give up:</div>
                   <div className="text-[14px] font-semibold">{giveUp} time(s)</div>
                 </div>

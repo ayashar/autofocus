@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useStreak } from '@/hooks/useStreak';
 
 type FocusSessionProps = {
   initialSeconds?: number;
@@ -56,6 +57,7 @@ function createChallenge(): ChallengeState {
 
 export default function FocusSession({ initialSeconds }: FocusSessionProps) {
   const router = useRouter();
+  const { addSession } = useStreak();
 
   const [total, setTotal] = useState(initialSeconds ?? 24 * 60 + 59);
   const [timeLeft, setTimeLeft] = useState(initialSeconds ?? 24 * 60 + 59);
@@ -91,6 +93,7 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
   }, [isRunning, timeLeft]);
 
   const handleGiveUp = () => {
+    setGiveUpAttempts((prev) => prev + 1);
     const nextChallenge = createChallenge();
     setChallenge(nextChallenge);
     setUserAnswer("");
@@ -216,7 +219,7 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
             <div className="mt-4 rounded-lg bg-[#9EE0FF] p-4 text-left text-black">
               <div className="flex justify-between">
                 <span>Time focused:</span>
-                <strong>{Math.round(total / 60)} minutes</strong>
+                <strong>{formatTime(total)}</strong>
               </div>
               <div className="flex justify-between mt-2">
                 <span>Almost give up:</span>
@@ -225,6 +228,20 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
             </div>
             <button
               onClick={() => {
+                addSession();
+                
+                try {
+                  const pastSessions = JSON.parse(localStorage.getItem("autofocus_past_sessions") || "[]");
+                  pastSessions.unshift({
+                    id: "sess_" + Date.now(),
+                    createdAt: new Date().toISOString(),
+                    targetDuration: total,
+                    actualDuration: total,
+                    _count: { distractions: giveUpAttempts }
+                  });
+                  localStorage.setItem("autofocus_past_sessions", JSON.stringify(pastSessions));
+                } catch (e) {}
+                
                 setShowFinishModal(false);
                 router.push('/dashboard');
               }}
@@ -259,7 +276,6 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
                 if (!challenge) return;
                 const correct = Number(userAnswer) === challenge.a * challenge.b;
                 if (correct) {
-                  setGiveUpAttempts((v) => v + 1);
                   setShowGiveUpChallenge(false);
                   setIsRunning(false);
                   router.push('/dashboard');
@@ -268,9 +284,15 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
                   alert('Incorrect answer, try again.');
                 }
               }}
-              className="mt-3 w-full rounded-lg bg-[#F9AFAF] py-3 text-[#7A1F1F] font-semibold"
+              className="mt-4 w-full rounded-lg bg-[#F9AFAF] py-3 text-[#7A1F1F] font-semibold"
             >
               Give Up!
+            </button>
+            <button
+              onClick={() => setShowGiveUpChallenge(false)}
+              className="mt-3 w-full rounded-lg bg-[#0673A8] py-3 font-semibold transition-colors hover:bg-[#056da6]"
+            >
+              Go Back
             </button>
           </div>
         </div>
