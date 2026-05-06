@@ -20,7 +20,7 @@ export default function Timer() {
     <div className="relative w-full h-full bg-white">
       {/* Header - spans to top of screen */}
       <div className="absolute top-0 left-0 right-0 overflow-hidden bg-[#33A5E1] z-10">
-        <div className="h-[86px]" />
+        <div className="h-21.5" />
       </div>
 
       {/* Main Content */}

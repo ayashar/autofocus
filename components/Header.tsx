@@ -1,15 +1,10 @@
-interface HeaderProps {
-  title: string;
-  subtitle?: string;
-}
+import Link from 'next/link';
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export default function Header() {
   return (
-    <div className="px-5 pt-4 pb-3">
-      <h1 className="text-[28px] font-bold text-[#1E1E1E] leading-tight">{title}</h1>
-      {subtitle && (
-        <p className="text-[14px] text-[#1E1E1E]/60 mt-1">{subtitle}</p>
-      )}
+    <div className="absolute top-0 left-0 right-0 h-[86px] flex items-center justify-center px-6 z-20 pt-8">
+  
+      <span className="text-[20px] font-bold text-[#00f2fe]">Autofocus</span>
     </div>
   );
 }
