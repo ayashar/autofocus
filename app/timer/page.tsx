@@ -34,7 +34,12 @@ export default function Timer() {
         <div className="h-8" />
 
         {/* Start Button */}
-        <StartButton />
+        <a
+          href="/focus?duration=1500"
+          className="mt-6 inline-flex h-[63px] w-full items-center justify-center rounded-[31.5px] bg-[#0077B6] text-[24px] font-medium text-white transition-colors hover:bg-[#056da6]"
+        >
+          Start
+        </a>
       </div>
     </MobileLayout>
   );

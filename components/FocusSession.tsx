@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 const imgDashboard2 = "https://www.figma.com/api/mcp/asset/36ffbc97-e7a0-43df-a366-5b8ada16cb05";
 const imgVector = "https://www.figma.com/api/mcp/asset/d83f23ce-92fb-4900-b889-b176ff12a6b2";
@@ -10,8 +9,13 @@ const imgVector2 = "https://www.figma.com/api/mcp/asset/a6aa170b-852f-4fe3-a820-
 const imgVector3 = "https://www.figma.com/api/mcp/asset/b949e0cd-6f64-43de-8dc2-228c5eb32919";
 const imgRectangle109 = "https://www.figma.com/api/mcp/asset/7288991d-9b0c-4cf4-be0a-d85f583251e7";
 
-export default function FocusSession() {
-  const [timeLeft, setTimeLeft] = useState(24 * 60 + 59); // 24:59 in seconds
+type FocusSessionProps = {
+  initialSeconds?: number;
+};
+
+export default function FocusSession({ initialSeconds }: FocusSessionProps) {
+  const total = initialSeconds ?? 24 * 60 + 59;
+  const [timeLeft, setTimeLeft] = useState(total);
   const [isRunning, setIsRunning] = useState(true);
 
   useEffect(() => {
@@ -32,103 +36,44 @@ export default function FocusSession() {
 
   const handleGiveUp = () => {
     setIsRunning(false);
-    // TODO: Handle session abandonment - could redirect or show modal
   };
 
+  const progress = 1 - timeLeft / total;
+  const radius = 80;
+  const stroke = 12;
+  const circumference = 2 * Math.PI * radius;
+
   return (
-    <div className="relative w-full h-full bg-[#1a1a1a] overflow-hidden">
-      {/* Background decorative element */}
-      <div className="absolute inset-0 opacity-30">
-        <img
-          alt=""
-          className="absolute block inset-0 max-w-none size-full"
-          src={imgDashboard2}
-        />
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-white p-6">
+      <div className="w-[340px] rounded-2xl bg-[#0077B6] p-6 text-center text-white">
+        <h2 className="text-[20px] font-bold">Adaptive Focus Session</h2>
 
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 h-[86px] flex items-center justify-between px-6 z-20">
-        {/* Back button / Menu icon */}
-        <div className="w-10 h-10 flex items-center justify-center">
-          <img
-            alt=""
-            className="block max-w-none size-full"
-            src={imgVector1}
-          />
+        <div className="mt-6 flex items-center justify-center">
+          <svg width="200" height="200" viewBox="0 0 220 220">
+            <g transform="translate(110,110)">
+              <circle r={radius} fill="none" stroke="#263238" strokeWidth={stroke} />
+              <circle
+                r={radius}
+                fill="none"
+                stroke="#39A0FF"
+                strokeWidth={stroke}
+                strokeLinecap="round"
+                strokeDasharray={`${circumference} ${circumference}`}
+                strokeDashoffset={Math.max(0, circumference * (1 - progress))}
+                style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+              />
+              <text x={0} y={8} textAnchor="middle" fontSize={36} fontWeight={700}>
+                {formatTime(timeLeft)}
+              </text>
+            </g>
+          </svg>
         </div>
 
-        {/* Logo */}
-        <Link href="/" className="text-[20px] font-bold text-[#00f2fe]">
-          Autofokus
-        </Link>
-
-        {/* Nav placeholder */}
-        <div className="w-10" />
-      </div>
-
-      {/* Navigation tabs */}
-      <div className="absolute top-[7.74%] right-6 left-[52.08%] flex justify-end">
-        <Link href="/dashboard" className="text-[14px] font-normal text-[#f8fafc]">
-          Dashboard
-        </Link>
-      </div>
-      <div className="absolute top-[7.74%] right-[72.92%] left-[6.04%]">
-        <Link href="/profile" className="text-[14px] font-normal text-[#94a3b8]">
-          Profil & Reward
-        </Link>
-      </div>
-
-      {/* Main Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-        {/* Title */}
-        <h1 className="text-[24px] font-bold text-[#f8fafc] text-center mb-2">
-          Adaptive Focus Session
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-[14px] font-normal text-[#94a3b8] text-center mb-8">
-          Fokus sedang berlangsung...
-        </p>
-
-        {/* Play icon / Decorative circle */}
-        <div className="w-[120px] h-[120px] mb-8 relative">
-          <img
-            alt=""
-            className="block max-w-none size-full"
-            src={imgVector2}
-          />
-        </div>
-
-        {/* Timer display */}
-        <div className="relative mb-12">
-          {/* Outer ring decorative */}
-          <div className="absolute -inset-5">
-            <img
-              alt=""
-              className="block max-w-none size-full"
-              src={imgVector3}
-            />
-          </div>
-
-          {/* Timer text */}
-          <p className="text-[56px] font-bold text-[#f8fafc] text-center tabular-nums relative z-10">
-            {formatTime(timeLeft)}
-          </p>
-        </div>
-
-        {/* Give Up Button */}
         <button
           onClick={handleGiveUp}
-          className="relative w-[295px] h-[53px] flex items-center justify-center"
+          className="mt-6 w-full rounded-lg bg-[#F9AFAF] py-3 text-[#7A1F1F] font-semibold"
         >
-          <img
-            alt=""
-            className="absolute block inset-0 max-w-none size-full"
-            src={imgRectangle109}
-          />
-          <span className="relative z-10 text-[18px] font-bold text-white">
-            Menyerah
-          </span>
+          Give Up!
         </button>
       </div>
     </div>
