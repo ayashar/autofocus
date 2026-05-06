@@ -17,7 +17,7 @@ model User {
   email           String         @unique
   password        String
   name            String
-  photoId         String
+  photoId         String?
   currentStreak   Int            @default(0)
   highestStreak   Int            @default(0)
   lastSessionDate DateTime?
@@ -32,7 +32,7 @@ model Configuration {
   id             String       @id @default(cuid())
   userId         String       @unique
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  targetDuration Int          @default(25) // Durasi Target dalam menit
+  targetDuration Int          @default(1500) // Durasi Target dalam detik (default 25 menit = 1500 detik)
   blockedApps    BlockedApp[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -53,8 +53,9 @@ model Session {
   user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   startTime      DateTime           @default(now())
   endTime        DateTime?
-  targetDuration Int                // Target durasi awal (menit)
-  actualDuration Int?               // Total waktu fokus terselesaikan (menit)
+  targetDuration Int                // Target durasi awal (dalam detik)
+  targetBreakDuration Int?          // Waktu istirahat dari tier yang dipilih (dalam detik)
+  actualDuration Int?               // Total waktu fokus terselesaikan (dalam detik)
   status         SessionStatus      @default(ONGOING)
   isRecovery     Boolean            @default(false) // Skenario 3: Session untuk Recovery Mode
   distractions   DistractionEvent[]

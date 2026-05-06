@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, targetDuration } = await request.json();
+    const { userId, targetDuration, targetBreakDuration, isRecovery } = await request.json();
 
     if (!userId || !targetDuration) {
       return NextResponse.json({
@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         targetDuration,
+        targetBreakDuration: targetBreakDuration || null,
+        isRecovery: isRecovery || false,
       },
     });
 
