@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  password        String
+  name            String
+  photoId         String
+  currentStreak   Int            @default(0)
+  highestStreak   Int            @default(0)
+  lastSessionDate DateTime?
+  gracePeriodUsed Boolean        @default(false)
+  configuration   Configuration?
+  sessions        Session[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Configuration {
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetDuration Int          @default(25) // Durasi Target dalam menit
+  blockedApps    BlockedApp[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model BlockedApp {
+  id              String        @id @default(cuid())
+  configurationId String
+  configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  name            String        // Nama aplikasi (misal: "Instagram", "TikTok")
+  packageName     String?       // ID unik aplikasi di OS (opsional)
+  createdAt       DateTime      @default(now())
+}
+
+model Session {
+  id             String             @id @default(cuid())
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startTime      DateTime           @default(now())
+  endTime        DateTime?
+  targetDuration Int                // Target durasi awal (menit)
+  actualDuration Int?               // Total waktu fokus terselesaikan (menit)
+  status         SessionStatus      @default(ONGOING)
+  isRecovery     Boolean            @default(false) // Skenario 3: Session untuk Recovery Mode
+  distractions   DistractionEvent[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+enum SessionStatus {
+  ONGOING
+  COMPLETED
+  INTERRUPTED
+  FAILED
+}
+
+model DistractionEvent {
+  id           String   @id @default(cuid())
+  sessionId    String
+  session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  levelReached Int      
+  isResolved   Boolean  
+  timestamp    DateTime @default(now())
+}
