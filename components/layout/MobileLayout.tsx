@@ -1,5 +1,5 @@
-import { Header } from "@/components/ui/header";
-import { Navbar } from "@/components/ui/navbar";
+import { Header } from "@/components/ui/Header";
+import { Navbar } from "@/components/ui/Navbar";
 
 export function MobileLayout({
   children,
@@ -13,13 +13,13 @@ export function MobileLayout({
   hideNavbar?: boolean;
 }) {
   return (
-    <div className="flex flex-col h-full w-full bg-white relative">
+    <div className="flex flex-col bg-white h-screen w-screen md:w-auto md:aspect-9/19.5 md:rounded-xl shadow-2xl overflow-hidden relative">
       <Header title={title} showBackButton={showBackButton} />
-      
-      <main className="flex-1 overflow-y-auto w-full">
+
+      <main className="flex-1 overflow-y-auto w-full px-4">
         {children}
       </main>
-      
+
       {!hideNavbar && <Navbar />}
     </div>
   );
