@@ -127,7 +127,7 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
               <circle
                 r={radius}
                 fill="none"
-                stroke="#39A0FF"
+                stroke="#EBD26C"
                 strokeWidth={stroke}
                 strokeLinecap="round"
                 strokeDasharray={`${circumference} ${circumference}`}
@@ -135,7 +135,7 @@ export default function FocusSession({ initialSeconds }: FocusSessionProps) {
                 transform="rotate(-90)"
                 style={{ transition: 'stroke-dashoffset 0.5s linear' }}
               />
-              <text x={0} y={8} textAnchor="middle" fontSize={36} fontWeight={700}>
+              <text x={0} y={8} textAnchor="middle" fontSize={36} fontWeight={700} fill="#F8FAFC">
                 {formatTime(timeLeft)}
               </text>
             </g>
