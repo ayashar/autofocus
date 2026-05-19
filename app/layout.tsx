@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AutoFocus",
+  title: "AutoFokus",
   description: "Focus & productivity app",
 };
 

@@ -18,7 +18,7 @@ export function Header({ title, showBackButton, backHref }: HeaderProps) {
     else if (pathname === "/timer") displayTitle = "Set Timer";
     else if (pathname === "/dashboard") displayTitle = "Dashboard";
     else if (pathname === "/focus") displayTitle = "Adaptive Focus Session";
-    else displayTitle = "AutoFocus";
+    else displayTitle = "AutoFokus";
   }
 
   return (

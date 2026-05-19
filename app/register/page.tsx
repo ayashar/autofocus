@@ -39,7 +39,7 @@ export default function RegisterPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col justify-center">
         <section className="text-center">
           <h1 className="text-[68px] font-black leading-none tracking-[-0.06em] text-[#031B77]">
-            AutoFocus
+            AutoFokus
           </h1>
           <p className="mt-1 text-[18px] text-[#8FA0C2]">Stop scrolling. Start Focusing.</p>
         </section>

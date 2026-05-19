@@ -51,7 +51,7 @@ export default function ClientProfile() {
 
         <section className="mt-16 text-center">
           <h1 className="text-[68px] font-black leading-none tracking-[-0.06em] text-[#031B77]">
-            AutoFocus
+            AutoFokus
           </h1>
           <p className="mt-1 text-[18px] text-[#8FA0C2]">Stop scrolling. Start Focusing.</p>
         </section>
