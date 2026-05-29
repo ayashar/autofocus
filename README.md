@@ -1,12 +1,12 @@
-# 🎯 AutoFocus
+# 🎯 AutoFokus
 
-**Stop scrolling. Start focusing.**
+**Lock your focus. AutoFokus on**
 
-AutoFocus adalah aplikasi produktivitas yang membantu Anda mempertahankan fokus dengan memblokir aplikasi yang mengganggu selama sesi konsentrasi.
+AutoFokus adalah aplikasi produktivitas yang membantu Anda mempertahankan fokus dengan memblokir aplikasi yang mengganggu selama sesi konsentrasi.
 
 ## 📱 Tentang Aplikasi
 
-AutoFocus dirancang untuk membantu pengguna memaksimalkan waktu produktif mereka dengan:
+AutoFokus dirancang untuk membantu pengguna memaksimalkan waktu produktif mereka dengan:
 
 - Membuat sesi fokus dengan durasi yang dapat disesuaikan
 - Memblokir aplikasi yang mengganggu (Instagram, YouTube, TikTok, Twitter, WhatsApp, dll)
@@ -53,23 +53,53 @@ AutoFocus dirancang untuk membantu pengguna memaksimalkan waktu produktif mereka
 
 **Platform:** Mobile-first web application (responsif untuk semua ukuran)
 
-## 📦 Instalasi & Development
+## 📦 Struktur Monorepo
+
+Repository ini menggunakan struktur monorepo untuk mengelola aplikasi web dan mobile:
+- **`apps/web/`**: Aplikasi Web & API (Next.js, Tailwind, Prisma, PostgreSQL).
+- **`apps/mobile/`**: Aplikasi Mobile (Flutter & Dart).
+
+## 🚀 Development & Perintah Kerja
+
+Semua dependency web dapat diinstal secara tersentralisasi menggunakan pnpm workspace di root.
+
+### 🌐 Aplikasi Web (Next.js)
+
+Jalankan perintah berikut di tingkat root repositori:
 
 ```bash
-# Install dependencies
+# Install dependencies (untuk workspace)
 pnpm install
 
-# Run development server
-pnpm dev
+# Jalankan server development web
+pnpm web:dev
 
-# Build untuk production
-pnpm build
+# Build web untuk production
+pnpm web:build
 
-# Push database schema
-pnpx prisma db push
+# Generate Prisma Client
+pnpm db:generate
+
+# Push skema database ke Supabase PostgreSQL
+pnpm db:push
 ```
 
-Akses aplikasi di `http://localhost:3000`
+Akses aplikasi web di `http://localhost:3000`
+
+### 📱 Aplikasi Mobile (Flutter)
+
+Masuk ke folder proyek mobile untuk menjalankan aplikasi Flutter:
+
+```bash
+# Masuk ke folder mobile
+cd apps/mobile
+
+# Dapatkan package dependencies
+flutter pub get
+
+# Jalankan aplikasi mobile
+flutter run
+```
 
 ---
 
