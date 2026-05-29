@@ -1,10 +1,21 @@
 @import "tailwindcss";
+
+:root {
+  --font-albert-sans: "Albert Sans";
+  --font-inter: "Inter";
+}
+
 @theme inline {
-  --color-primary-100: #3B733D;
-  --color-primary-200: #529B54;
-  --color-primary-300: #D2E3C8;
-  --color-primary-400: #A8CDA9;
-  --color-neutral-500: #444444;
+  --color-primary-50: #F2FBF3;
+  --color-primary-100: #D7F5D9;
+  --color-primary-200: #B9E8BA;
+  --color-primary-300: #6FC96F;
+  --color-primary-400: #4FA253;
+  --color-primary-500: #357A3A;
+  --color-primary-600: #275D2D;
+  --color-ink: #061A0B;
+  --color-muted: #9AAC92;
+  --color-line: #B9C7B4;
 
   --color-destructive-100: #FFA7A7;
   --color-destructive-200: #8E0000;
@@ -18,9 +29,25 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background: #333333;
+  background: #EFF6EE;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #061A0B;
+  font-family: var(--font-albert-sans), "Albert Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  min-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.brand-font {
+  font-family: var(--font-inter), Inter, var(--font-albert-sans), sans-serif;
 }

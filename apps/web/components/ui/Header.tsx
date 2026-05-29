@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 
 interface HeaderProps {
   title?: string;
@@ -22,17 +23,17 @@ export function Header({ title, showBackButton, backHref }: HeaderProps) {
   }
 
   return (
-    <header className="bg-primary-200 text-white px-4 py-4 flex items-center shrink-0">
+    <header className="flex h-[62px] shrink-0 items-center bg-primary-400 px-5 text-white">
       {showBackButton && (
         <Link
           href={backHref ?? "/"}
-          className="mr-4 p-1 -ml-1 rounded-full hover:bg-white/20 transition-colors"
+          className="-ml-1 mr-4 rounded-full p-1 transition-colors hover:bg-white/20"
           aria-label="Go back"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+          <ChevronLeft size={24} />
         </Link>
       )}
-      <h1 className="font-bold text-2xl">{displayTitle}</h1>
+      <h1 className="text-[24px] font-bold">{displayTitle}</h1>
     </header>
   );
 }

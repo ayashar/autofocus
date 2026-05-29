@@ -1,22 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-
-function formatTime(totalSeconds: number) {
-  const safeSeconds = Math.max(0, totalSeconds);
-  const hours = Math.floor(safeSeconds / 3600);
-  const mins = Math.floor((safeSeconds % 3600) / 60)
-    .toString()
-    .padStart(2, '0');
-  const secs = Math.floor(safeSeconds % 60)
-    .toString()
-    .padStart(2, '0');
-  if (hours > 0) {
-    return `${hours}:${mins}:${secs}`;
-  }
-  return `${mins}:${secs}`;
-}
+import Link from "next/link";
+import { User } from "lucide-react";
+import { useState } from "react";
 
 type Session = {
   id: string;
@@ -26,94 +12,75 @@ type Session = {
   _count?: { distractions?: number };
 };
 
+function isLoggedIn() {
+  try {
+    const auth = JSON.parse(localStorage.getItem("autofocus_auth") || "{}");
+    return Boolean(auth?.loggedIn);
+  } catch {
+    return false;
+  }
+}
+
 export default function SessionListClient() {
-  const search = useSearchParams();
-  const userId = search?.get("userId");
-  const [loading, setLoading] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [localSessions, setLocalSessions] = useState<Session[]>([]);
-  const [streak, setStreak] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [loggedIn] = useState(() => (typeof window === "undefined" ? false : isLoggedIn()));
+  const [sessions] = useState<Session[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
-      const stored = localStorage.getItem("autofocus_past_sessions");
-      if (stored) {
-        setLocalSessions(JSON.parse(stored));
-      }
-    } catch (e) {}
-  }, []);
-
-  useEffect(() => {
-    async function load() {
-      if (!userId) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/user/profile?userId=${userId}`, { cache: "no-store" });
-        const json = await res.json();
-        if (res.ok && json?.data) {
-          setSessions(json.data.sessions || []);
-          setStreak(json.data.currentStreak ?? null);
-        } else {
-          setError(json?.error || "Failed to load sessions");
-        }
-      } catch (e) {
-        setError("Failed to load sessions");
-      } finally {
-        setLoading(false);
-      }
+      return JSON.parse(localStorage.getItem("autofocus_past_sessions") || "[]") as Session[];
+    } catch {
+      return [];
     }
-
-    load();
-  }, [userId]);
-
-  // Fallback sample data when no userId provided
-  const sample = [
-    { id: "s1", createdAt: new Date().toISOString(), targetDuration: 1500, actualDuration: 1500, _count: { distractions: 0 } },
-    { id: "s2", createdAt: new Date().toISOString(), targetDuration: 1500, actualDuration: 1500, _count: { distractions: 0 } },
-    { id: "s3", createdAt: new Date().toISOString(), targetDuration: 1500, actualDuration: 1500, _count: { distractions: 0 } },
-    { id: "s4", createdAt: new Date().toISOString(), targetDuration: 1500, actualDuration: 1500, _count: { distractions: 0 } },
-  ];
-
-  const dataToRender = [...localSessions, ...(userId ? sessions : sample)];
+  });
 
   return (
     <div>
-      <h3 className="mb-3 text-[18px] font-bold text-[#031B77]">Past Sessions</h3>
-      {!userId && (
-        <p className="mb-3 text-sm text-[#64748B]">No user selected. Showing sample sessions.</p>
-      )}
+      <h2 className="mb-4 text-[20px] font-bold text-ink">Past Sessions</h2>
 
-      {loading && <p className="text-sm text-[#64748B]">Loading sessions...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {!loggedIn ? (
+        <div className="flex min-h-[560px] flex-col items-center justify-center text-center text-ink">
+          <User size={124} strokeWidth={1.8} />
+          <h3 className="mt-8 text-[20px] font-bold">Log in first to record your sessions!</h3>
+          <Link
+            href="/"
+            className="mt-5 flex h-[39px] w-[323px] max-w-full items-center justify-center rounded-[7px] bg-primary-500 text-[16px] font-medium text-white transition-colors hover:bg-primary-600"
+          >
+            Log In
+          </Link>
+        </div>
+      ) : sessions.length === 0 ? (
+        <div className="py-20 text-center text-[15px] text-muted">
+          No sessions recorded yet.
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {sessions.map((session) => {
+            const date = new Date(session.createdAt).toLocaleDateString("en-GB");
+            const minutes = Math.round(((session.actualDuration ?? session.targetDuration) || 0) / 60);
+            const giveUp = session._count?.distractions ?? 0;
 
-      <div className="grid gap-3">
-        {dataToRender.map((s) => {
-          const date = new Date(s.createdAt).toLocaleDateString("en-GB");
-          const minutes = Math.round(((s.actualDuration ?? s.targetDuration) || 0) / 60);
-          const giveUp = s._count?.distractions ?? 0;
-
-          return (
-            <div key={s.id} className="flex items-stretch">
-              <div className="flex w-full items-center gap-4 rounded-[10px] bg-gradient-to-r from-[#0077B6] to-[#0086C3] p-4 text-white">
-                <div className="flex-shrink-0 w-[110px]">
-                  <div className="rounded-[8px] bg-[#0b84bf] p-3 text-center">
-                    <div className="text-[14px] font-semibold">{date}</div>
+            return (
+              <article
+                key={session.id}
+                className="grid grid-cols-[0.95fr_1.45fr] items-center rounded-[4px] bg-primary-500 px-4 py-3 text-white"
+              >
+                <div className="border-r border-white/80 pr-4 text-center text-[20px] font-bold">
+                  {date}
+                </div>
+                <div className="space-y-2 pl-5 text-[15px]">
+                  <div className="flex justify-between gap-3">
+                    <span>Time focused:</span>
+                    <strong>{minutes} minutes</strong>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span>Almost give up:</span>
+                    <strong>{giveUp} time(s)</strong>
                   </div>
                 </div>
-
-                <div className="flex-1 border-l border-white/30 pl-4">
-                  <div className="text-[13px] text-white/90">Time focused:</div>
-                  <div className="mt-1 text-[16px] font-bold">{formatTime((s.actualDuration ?? s.targetDuration) || 0)}</div>
-                  <div className="mt-2 text-[13px] text-white/90">Almost give up:</div>
-                  <div className="text-[14px] font-semibold">{giveUp} time(s)</div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,99 +1,109 @@
 "use client";
 
-import { MobileLayout } from "@/components/layout/MobileLayout";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { useStreak } from "@/hooks/useStreak";
+import { MobileLayout } from "@/components/layout/MobileLayout";
+import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/TextField";
 import { RecoveryModal } from "@/components/ui/RecoveryModal";
-import Link from "next/link";
+import { useStreak } from "@/hooks/useStreak";
 
 const avatars = [1, 2, 3, 4];
 
+type StoredUser = {
+  name?: string;
+  photoId?: string;
+};
+
+function readStoredUser(): StoredUser {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem("mockUser") || "{}") as StoredUser;
+  } catch {
+    return {};
+  }
+}
+
 export default function ProfilePage() {
-  const { currentStreak, status, debugForwardTime } = useStreak();
+  const { currentStreak, status } = useStreak();
   const [showModal, setShowModal] = useState(false);
+  const [username, setUsername] = useState(() => readStoredUser().name ?? "User");
+  const [photoId, setPhotoId] = useState(() => readStoredUser().photoId ?? "1");
+
+  function saveProfile() {
+    const existing = JSON.parse(localStorage.getItem("mockUser") || "{}");
+    const next = { ...existing, name: username, photoId, loggedIn: true };
+    localStorage.setItem("mockUser", JSON.stringify(next));
+    localStorage.setItem("autofocus_auth", JSON.stringify(next));
+  }
 
   return (
     <MobileLayout title="Profile">
       {showModal && <RecoveryModal onClose={() => setShowModal(false)} />}
-      <div className="mx-auto w-full max-w-[390px] pb-6 pt-5">
-        <section className="rounded-[24px] bg-[#CFEFFF] px-4 py-4">
-          <div className="flex items-center gap-4">
-            <div className="h-20 w-20 shrink-0 rounded-full bg-[#D9D9D9]" />
+      <div className="mx-auto w-full max-w-[390px] pb-6 pt-6">
+        <section className="rounded-[20px] bg-primary-100 px-5 py-7">
+          <div className="flex items-center gap-5">
+            <div className="h-[76px] w-[76px] shrink-0 rounded-full bg-[#D9D9D9]" />
             <div>
-              <p className="text-[22px] leading-tight text-[#031B77]">
-                Hello, <span className="font-bold">User!</span>
+              <p className="text-[20px] leading-tight text-ink">
+                Hello, <span className="font-bold">{username}!</span>
               </p>
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-[16px] font-bold text-[#031B77]">
-                <span>Current streak: {currentStreak}</span>
+              <p className="mt-3 text-[16px] font-bold text-ink">
+                Current streak: {currentStreak}
               </p>
-              {status === 'recovery' && (
-                <div className="mt-1.5 inline-flex items-center rounded border border-[#E53E3E] bg-[#FFE5E5] px-2 py-0.5 text-[12px] font-medium text-[#E53E3E]">
-                  Streak lost! <button onClick={() => setShowModal(true)} className="ml-1 font-bold underline">Recover</button>
-                </div>
+              {status === "recovery" && (
+                <button
+                  type="button"
+                  onClick={() => setShowModal(true)}
+                  className="mt-2 rounded border border-destructive-200 bg-destructive-100 px-2 py-0.5 text-[12px] font-semibold text-destructive-200"
+                >
+                  Recover streak
+                </button>
               )}
             </div>
           </div>
         </section>
 
-        {/* Debug Buttons for Prototype */}
-        <div className="mt-4 rounded-xl border border-yellow-300 bg-yellow-50 p-4">
-          <p className="mb-2 text-[12px] font-bold text-yellow-800">Time machine (Untuk prototype smart streak)</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => debugForwardTime(24.1)}
-              className="rounded bg-yellow-500 px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-yellow-600"
-            >
-              Fast Forward 24h (Recovery)
-            </button>
-            <button
-              onClick={() => debugForwardTime(26.1)}
-              className="rounded bg-red-500 px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-red-600"
-            >
-              Fast Forward 26h (Lost)
-            </button>
-          </div>
-        </div>
+        <h2 className="mt-10 text-[22px] font-bold text-ink">Change profile</h2>
 
-        <p className="mt-4">Fitur ini masih dalam pengembangan</p>
-        <h2 className="mt-8 text-[22px] font-bold text-[#031B77]">Change profile</h2>
-
-        <div className="mt-5 grid grid-cols-[1.2fr_1fr] gap-4">
+        <div className="mt-8 grid grid-cols-[1.2fr_1fr] gap-5">
           <div>
-            <label className="text-[16px] text-[#111827]" htmlFor="profile-username">
-              Username
-            </label>
-            <input
+            <TextField
               id="profile-username"
-              type="text"
+              label="Username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
               placeholder="username"
-              className="mt-2 h-10 w-full rounded-[9px] border border-[#A3ADC2] px-3 text-[15px] text-[#0F172A] outline-none placeholder:text-[#A3ADC2] focus:border-[#0077B6] focus:ring-2 focus:ring-[#CAF0F8]"
             />
 
-            <button
-              type="button"
-              className="mt-8 h-[38px] w-full rounded-[8px] bg-[#0077B6] text-[18px] font-medium text-white transition-colors hover:bg-[#056da6]"
-            >
+            <Button type="button" size="large" className="mt-12 h-[38px]" onClick={saveProfile}>
               Save
-            </button>
+            </Button>
 
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+            <Button
+              onClick={() => {
+                localStorage.setItem("autofocus_auth", JSON.stringify({ loggedIn: false, mode: "guest" }));
+                signOut({ callbackUrl: "/" });
+              }}
               type="button"
-              className="mt-3 h-[36px] w-full rounded-[8px] bg-[#E53E3E] text-[16px] font-medium text-white transition-colors hover:bg-[#cc2f2f]"
+              variant="destructive"
+              className="mt-3 h-9 w-full"
             >
               Logout
-            </button>
+            </Button>
           </div>
 
           <div>
-            <p className="text-[16px] text-[#111827]">Profile Picture</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <p className="text-[16px] text-ink">Profile Picture</p>
+            <div className="mt-3 grid grid-cols-2 gap-2.5">
               {avatars.map((avatar) => (
                 <button
                   key={avatar}
                   type="button"
-                  className="aspect-square rounded-[4px] bg-[#D9D9D9] transition-transform active:scale-95"
+                  onClick={() => setPhotoId(String(avatar))}
+                  className={`aspect-square rounded-[4px] bg-[#D9D9D9] transition-transform active:scale-95 ${
+                    photoId === String(avatar) ? "ring-2 ring-primary-500 ring-offset-2" : ""
+                  }`}
                   aria-label={`Choose profile avatar ${avatar}`}
                 />
               ))}

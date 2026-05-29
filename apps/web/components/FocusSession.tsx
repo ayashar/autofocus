@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useStreak } from '@/hooks/useStreak';
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useStreak } from "@/hooks/useStreak";
+import { AppModal } from "@/components/ui/AppModal";
+import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/TextField";
+import { TimeInput, secondsToTimeValue, timeValueToSeconds } from "@/components/ui/TimeInput";
+import { TimerSegment, formatClock, totalFocusSeconds } from "@/lib/timers";
 
 type FocusSessionProps = {
   initialSeconds?: number;
@@ -19,35 +24,11 @@ type ChallengeState = {
   b: number;
 };
 
-function formatTime(totalSeconds: number) {
-  const safeSeconds = Math.max(0, totalSeconds);
-  const mins = Math.floor(safeSeconds / 60)
-    .toString()
-    .padStart(2, '0');
-  const secs = Math.floor(safeSeconds % 60)
-    .toString()
-    .padStart(2, '0');
-  return `${mins}:${secs}`;
-}
-
-function toTimerForm(totalSeconds: number): TimerFormState {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  return {
-    hours: String(hours),
-    minutes: String(minutes),
-    seconds: String(seconds),
-  };
-}
-
-function fromTimerForm(form: TimerFormState) {
-  const hours = Number(form.hours || 0);
-  const minutes = Number(form.minutes || 0);
-  const seconds = Number(form.seconds || 0);
-  return hours * 3600 + minutes * 60 + seconds;
-}
+type ActivePlan = {
+  timers?: TimerSegment[];
+  isGuest?: boolean;
+  userId?: string | null;
+};
 
 function createChallenge(): ChallengeState {
   const a = Math.floor(Math.random() * 11) + 2;
@@ -55,249 +36,293 @@ function createChallenge(): ChallengeState {
   return { a, b };
 }
 
+function readAuthState() {
+  if (typeof window === "undefined") return false;
+  try {
+    const auth = JSON.parse(localStorage.getItem("autofocus_auth") || "{}");
+    return Boolean(auth?.loggedIn);
+  } catch {
+    return false;
+  }
+}
+
+function readActivePlan(fallbackSeconds: number) {
+  const fallbackTimers = [{ id: "fallback", focusSeconds: fallbackSeconds, breakSeconds: 0 }];
+  if (typeof window === "undefined") {
+    return {
+      timers: fallbackTimers,
+      isGuest: false,
+      isLoggedIn: false,
+      timeLeft: fallbackSeconds,
+    };
+  }
+
+  try {
+    const stored = JSON.parse(localStorage.getItem("autofocus_active_plan") || "{}") as ActivePlan;
+    if (stored.timers?.length) {
+      return {
+        timers: stored.timers,
+        isGuest: Boolean(stored.isGuest),
+        isLoggedIn: readAuthState(),
+        timeLeft: stored.timers[0].focusSeconds,
+      };
+    }
+  } catch {}
+
+  return {
+    timers: fallbackTimers,
+    isGuest: false,
+    isLoggedIn: readAuthState(),
+    timeLeft: fallbackSeconds,
+  };
+}
+
 export default function FocusSession({ initialSeconds }: FocusSessionProps) {
   const router = useRouter();
   const { addSession } = useStreak();
+  const fallbackSeconds = initialSeconds ?? 24 * 60 + 59;
+  const initialPlan = useMemo(() => readActivePlan(fallbackSeconds), [fallbackSeconds]);
 
-  const [total, setTotal] = useState(initialSeconds ?? 24 * 60 + 59);
-  const [timeLeft, setTimeLeft] = useState(initialSeconds ?? 24 * 60 + 59);
+  const [timers, setTimers] = useState<TimerSegment[]>(() => initialPlan.timers);
+  const [isGuest] = useState(() => initialPlan.isGuest);
+  const [isLoggedIn] = useState(() => initialPlan.isLoggedIn);
+  const [segmentIndex, setSegmentIndex] = useState(0);
+  const [phase, setPhase] = useState<"focus" | "break">("focus");
+  const [timeLeft, setTimeLeft] = useState(() => initialPlan.timeLeft);
   const [isRunning, setIsRunning] = useState(true);
   const [giveUpAttempts, setGiveUpAttempts] = useState(0);
-
   const [showSetTimer, setShowSetTimer] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showGiveUpChallenge, setShowGiveUpChallenge] = useState(false);
   const [challenge, setChallenge] = useState<ChallengeState | null>(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [timerForm, setTimerForm] = useState<TimerFormState>(() =>
-    toTimerForm(initialSeconds ?? 24 * 60 + 59),
+    secondsToTimeValue(fallbackSeconds),
   );
+
+  const currentTimer = timers[segmentIndex] ?? timers[0];
+  const phaseTotal = phase === "focus" ? currentTimer.focusSeconds : currentTimer.breakSeconds;
+  const focusedTotal = useMemo(() => totalFocusSeconds(timers), [timers]);
 
   useEffect(() => {
     if (!isRunning || timeLeft <= 0) return undefined;
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsRunning(false);
-          setShowFinishModal(true);
-          return 0;
-        }
-
-        return prev - 1;
-      });
+      setTimeLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(interval);
   }, [isRunning, timeLeft]);
 
-  const handleGiveUp = () => {
-    setGiveUpAttempts((prev) => prev + 1);
-    const nextChallenge = createChallenge();
-    setChallenge(nextChallenge);
-    setUserAnswer("");
-    setShowGiveUpChallenge(true);
-  };
+  useEffect(() => {
+    if (timeLeft > 0 || !isRunning) return;
+
+    const transition = window.setTimeout(() => {
+      if (phase === "focus" && currentTimer.breakSeconds > 0) {
+        setPhase("break");
+        setTimeLeft(currentTimer.breakSeconds);
+        return;
+      }
+
+      const nextIndex = segmentIndex + 1;
+      if (nextIndex < timers.length) {
+        setSegmentIndex(nextIndex);
+        setPhase("focus");
+        setTimeLeft(timers[nextIndex].focusSeconds);
+        setTimerForm(secondsToTimeValue(timers[nextIndex].focusSeconds));
+        return;
+      }
+
+      setIsRunning(false);
+      setShowFinishModal(true);
+    }, 0);
+
+    return () => window.clearTimeout(transition);
+  }, [currentTimer, isRunning, phase, segmentIndex, timeLeft, timers]);
 
   const progress = useMemo(() => {
-    if (total <= 0) return 0;
-    return 1 - timeLeft / total;
-  }, [timeLeft, total]);
+    if (phaseTotal <= 0) return 0;
+    return 1 - timeLeft / phaseTotal;
+  }, [phaseTotal, timeLeft]);
 
-  const radius = 80;
-  const stroke = 12;
+  const radius = 82;
+  const stroke = 10;
   const circumference = 2 * Math.PI * radius;
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white w-screen">
-      <div className="w-85 rounded-2xl bg-primary-100 p-6 text-center text-white">
-        <h2 className="text-[20px] font-bold">Adaptive Focus Session</h2>
+  function handleGiveUp() {
+    setGiveUpAttempts((prev) => prev + 1);
+    setChallenge(createChallenge());
+    setUserAnswer("");
+    setShowGiveUpChallenge(true);
+  }
 
-        <div className="mt-6 flex items-center justify-center">
-          <svg
-            width="200"
-            height="200"
-            viewBox="0 0 220 220"
-            onClick={() => setShowSetTimer(true)}
-            className="cursor-pointer"
-          >
+  function saveFinishedSession() {
+    if (isGuest || !isLoggedIn) {
+      setShowFinishModal(false);
+      setShowLoginModal(true);
+      return;
+    }
+
+    addSession();
+
+    try {
+      const pastSessions = JSON.parse(localStorage.getItem("autofocus_past_sessions") || "[]");
+      pastSessions.unshift({
+        id: "sess_" + Date.now(),
+        createdAt: new Date().toISOString(),
+        targetDuration: focusedTotal,
+        actualDuration: focusedTotal,
+        _count: { distractions: giveUpAttempts },
+      });
+      localStorage.setItem("autofocus_past_sessions", JSON.stringify(pastSessions));
+      localStorage.removeItem("autofocus_active_plan");
+    } catch {}
+
+    router.push("/dashboard");
+  }
+
+  return (
+    <div className="flex min-h-screen w-screen items-center justify-center bg-white px-[18px]">
+      <div className="w-full max-w-[394px] rounded-[16px] bg-primary-500 px-4 py-6 text-center text-white">
+        <h2 className="text-[32px] font-bold">
+          {phase === "focus" ? "Focus Session" : "Break Time"}
+        </h2>
+        <p className="mt-7 text-[32px] font-bold">#{segmentIndex + 1}</p>
+
+        <button
+          type="button"
+          onClick={() => setShowSetTimer(true)}
+          className="mt-8 inline-flex items-center justify-center"
+          aria-label="Change current timer"
+        >
+          <svg width="260" height="260" viewBox="0 0 220 220">
             <g transform="translate(110,110)">
-              <circle r={radius} fill="none" stroke="#263238" strokeWidth={stroke} transform="rotate(-90)" />
+              <circle r={radius} fill="none" stroke="#33383A" strokeWidth={stroke} transform="rotate(-90)" />
               <circle
                 r={radius}
                 fill="none"
-                stroke="#EBD26C"
+                stroke="#A9BAA2"
                 strokeWidth={stroke}
                 strokeLinecap="round"
                 strokeDasharray={`${circumference} ${circumference}`}
                 strokeDashoffset={Math.max(0, circumference * (1 - progress))}
                 transform="rotate(-90)"
-                style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+                style={{ transition: "stroke-dashoffset 0.5s linear" }}
               />
-              <text x={0} y={8} textAnchor="middle" fontSize={36} fontWeight={700} fill="#F8FAFC">
-                {formatTime(timeLeft)}
+              <text x={0} y={10} textAnchor="middle" fontSize={34} fontWeight={800} fill="#FFFFFF">
+                {formatClock(timeLeft)}
               </text>
             </g>
           </svg>
-        </div>
-
-        <button
-          onClick={handleGiveUp}
-          className="mt-6 w-full rounded-lg bg-[#F9AFAF] py-3 text-[#7A1F1F] font-semibold"
-        >
-          Give Up!
         </button>
+
+        <Button type="button" variant="destructive" size="large" className="mt-4" onClick={handleGiveUp}>
+          Give Up!
+        </Button>
       </div>
 
-      {/* Modals */}
       {showSetTimer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowSetTimer(false)} />
-          <div className="relative z-10 w-80 rounded-2xl bg-[#29A9E1] p-6 text-center text-white">
-            <button className="absolute right-3 top-3 text-white/90" onClick={() => setShowSetTimer(false)}>✕</button>
-            <h3 className="text-[20px] font-bold">Set Timer</h3>
-            <p className="mt-2 text-sm text-white/90">This will be saved as your focus duration.</p>
-
-            <div className="mt-6 grid grid-cols-3 gap-2">
-              <label className="text-left text-sm">
-                <span className="mb-1 block text-white/90">Hours</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={timerForm.hours}
-                  onChange={(e) => setTimerForm((prev) => ({ ...prev, hours: e.target.value }))}
-                  className="w-full rounded-lg bg-white/20 px-3 py-2 text-center text-white outline-none placeholder:text-white/60"
-                />
-              </label>
-              <label className="text-left text-sm">
-                <span className="mb-1 block text-white/90">Minutes</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={timerForm.minutes}
-                  onChange={(e) => setTimerForm((prev) => ({ ...prev, minutes: e.target.value }))}
-                  className="w-full rounded-lg bg-white/20 px-3 py-2 text-center text-white outline-none placeholder:text-white/60"
-                />
-              </label>
-              <label className="text-left text-sm">
-                <span className="mb-1 block text-white/90">Seconds</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={timerForm.seconds}
-                  onChange={(e) => setTimerForm((prev) => ({ ...prev, seconds: e.target.value }))}
-                  className="w-full rounded-lg bg-white/20 px-3 py-2 text-center text-white outline-none placeholder:text-white/60"
-                />
-              </label>
-            </div>
-
-            <button
-              onClick={() => {
-                const seconds = fromTimerForm(timerForm);
-                if (seconds > 0) {
-                  setTotal(seconds);
-                  setTimeLeft(seconds);
-                  setIsRunning(true);
-                  setShowFinishModal(false);
-                }
-                setShowSetTimer(false);
-              }}
-              className="mt-6 w-full rounded-lg bg-[#0673A8] py-3 font-semibold"
-            >
-              Set Timer
-            </button>
+        <AppModal title="Set Timer" onClose={() => setShowSetTimer(false)}>
+          <div className="mt-7">
+            <TimeInput value={timerForm} onChange={setTimerForm} />
           </div>
-        </div>
+          <Button
+            type="button"
+            size="large"
+            className="mt-9"
+            onClick={() => {
+              const seconds = timeValueToSeconds(timerForm);
+              if (seconds > 0) {
+                setTimers((prev) =>
+                  prev.map((timer, index) =>
+                    index === segmentIndex
+                      ? {
+                          ...timer,
+                          [phase === "focus" ? "focusSeconds" : "breakSeconds"]: seconds,
+                        }
+                      : timer,
+                  ),
+                );
+                setTimeLeft(seconds);
+                setIsRunning(true);
+              }
+              setShowSetTimer(false);
+            }}
+          >
+            Set Timer
+          </Button>
+        </AppModal>
       )}
 
       {showFinishModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowFinishModal(false)} />
-          <div className="relative z-10 w-80 rounded-2xl bg-[#29A9E1] p-6 text-center text-white">
-            <h3 className="text-[20px] font-bold">Session Finished!</h3>
-            <div className="mt-4 rounded-lg bg-[#9EE0FF] p-4 text-left text-black">
-              <div className="flex justify-between">
-                <span>Time focused:</span>
-                <strong>{formatTime(total)}</strong>
-              </div>
-              <div className="flex justify-between mt-2">
-                <span>Almost give up:</span>
-                <strong>{giveUpAttempts} time(s)</strong>
-              </div>
+        <AppModal title="Session Finished!">
+          <div className="mt-8 rounded-[7px] bg-primary-300 p-5 text-left text-ink">
+            <div className="flex justify-between gap-4">
+              <span>Time focused:</span>
+              <strong>{Math.round(focusedTotal / 60)} minutes</strong>
             </div>
-            <button
-              onClick={() => {
-                addSession();
-                
-                try {
-                  const pastSessions = JSON.parse(localStorage.getItem("autofocus_past_sessions") || "[]");
-                  pastSessions.unshift({
-                    id: "sess_" + Date.now(),
-                    createdAt: new Date().toISOString(),
-                    targetDuration: total,
-                    actualDuration: total,
-                    _count: { distractions: giveUpAttempts }
-                  });
-                  localStorage.setItem("autofocus_past_sessions", JSON.stringify(pastSessions));
-                } catch (e) {}
-                
-                setShowFinishModal(false);
-                router.push('/dashboard');
-              }}
-              className="mt-4 w-full rounded-lg bg-[#0673A8] py-3 font-semibold"
-            >
-              Save and Finish
-            </button>
+            <div className="mt-5 flex justify-between gap-4">
+              <span>Almost give up:</span>
+              <strong>{giveUpAttempts} time(s)</strong>
+            </div>
           </div>
-        </div>
+          <Button type="button" size="large" className="mt-9" onClick={saveFinishedSession}>
+            Save and Finish
+          </Button>
+        </AppModal>
+      )}
+
+      {showLoginModal && (
+        <AppModal title="Oops! You need to Log In to save your progress" onClose={() => setShowLoginModal(false)}>
+          <Button type="button" size="large" className="mt-9" onClick={() => router.push("/")}>
+            Log in
+          </Button>
+          <Button type="button" variant="destructive" size="large" className="mt-3" onClick={() => router.push("/dashboard")}>
+            Lose my progress
+          </Button>
+        </AppModal>
       )}
 
       {showGiveUpChallenge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowGiveUpChallenge(false)} />
-          <div className="relative z-10 w-85 rounded-2xl bg-[#29A9E1] p-6 text-center text-white">
-            <h3 className="text-[20px] font-bold">Wait a minute!</h3>
-            <p className="mt-2 text-sm">Answer this question first to stop your session</p>
-
-            <div className="mt-6 text-[28px] font-bold">
-              {challenge ? `${challenge.a} × ${challenge.b} = ?` : '---'}
-            </div>
-
-            <input
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Your Answer"
-              className="mt-4 w-full rounded px-3 py-2 text-black"
-            />
-
-            <button
-              onClick={() => {
-                if (!challenge) return;
-                const correct = Number(userAnswer) === challenge.a * challenge.b;
-                if (correct) {
-                  setShowGiveUpChallenge(false);
-                  setIsRunning(false);
-                  router.push('/dashboard');
-                } else {
-                  // shake or indicate error - simple alert for now
-                  alert('Incorrect answer, try again.');
-                }
-              }}
-              className="mt-4 w-full rounded-lg bg-[#F9AFAF] py-3 text-[#7A1F1F] font-semibold"
-            >
-              Give Up!
-            </button>
-            <button
-              onClick={() => setShowGiveUpChallenge(false)}
-              className="mt-3 w-full rounded-lg bg-[#0673A8] py-3 font-semibold transition-colors hover:bg-[#056da6]"
-            >
-              Go Back
-            </button>
+        <AppModal title="Wait a minute!">
+          <p className="mt-4 text-[15px]">Answer this question first to stop your session</p>
+          <div className="mt-16 text-[34px] font-bold">
+            {challenge ? `${challenge.a} × ${challenge.b} = ?` : "---"}
           </div>
-        </div>
+          <div className="mx-auto mt-8 max-w-[246px]">
+            <TextField
+              label=""
+              aria-label="Your answer"
+              value={userAnswer}
+              onChange={(event) => setUserAnswer(event.target.value)}
+              placeholder="Your Answer"
+              inputMode="numeric"
+              className="border-0 bg-primary-500/60 text-white placeholder:text-ink"
+            />
+          </div>
+          <Button type="button" size="large" className="mt-20" onClick={() => setShowGiveUpChallenge(false)}>
+            Go back
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="large"
+            className="mt-3"
+            onClick={() => {
+              if (!challenge) return;
+              const correct = Number(userAnswer) === challenge.a * challenge.b;
+              if (correct) {
+                setShowGiveUpChallenge(false);
+                setIsRunning(false);
+                router.push("/dashboard");
+              }
+            }}
+          >
+            Give Up!
+          </Button>
+        </AppModal>
       )}
-
     </div>
   );
 }

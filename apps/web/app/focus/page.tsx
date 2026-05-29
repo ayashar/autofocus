@@ -4,15 +4,16 @@ import FocusClient from "./FocusClient";
 export const dynamic = "force-dynamic";
 
 type FocusPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     duration?: string | string[];
-  };
+  }>;
 };
 
-export default function Page({ searchParams }: FocusPageProps) {
-  const durationParam = Array.isArray(searchParams?.duration)
-    ? searchParams?.duration[0]
-    : searchParams?.duration;
+export default async function Page({ searchParams }: FocusPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const durationParam = Array.isArray(resolvedSearchParams?.duration)
+    ? resolvedSearchParams?.duration[0]
+    : resolvedSearchParams?.duration;
 
   const fallbackSeconds = (() => {
     const n = Number(durationParam);

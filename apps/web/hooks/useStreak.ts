@@ -14,56 +14,52 @@ const STREAK_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 // 2 hours grace period
 const GRACE_PERIOD_MS = 2 * 60 * 60 * 1000;
 
-export function useStreak() {
-  const [streakData, setStreakData] = useState<StreakData>({
-    lastSessionTimestamp: null,
-    currentStreak: 0,
-  });
-  const [status, setStatus] = useState<StreakStatus>('active');
+function readStreakData(): StreakData {
+  if (typeof window === 'undefined') {
+    return { lastSessionTimestamp: null, currentStreak: 0 };
+  }
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as StreakData;
-        setStreakData(parsed);
-      } catch (e) {
-        console.error('Failed to parse streak data', e);
-      }
-    }
-  }, []);
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) {
+    return { lastSessionTimestamp: null, currentStreak: 0 };
+  }
+
+  try {
+    return JSON.parse(stored) as StreakData;
+  } catch (e) {
+    console.error('Failed to parse streak data', e);
+    return { lastSessionTimestamp: null, currentStreak: 0 };
+  }
+}
+
+function getStatus(data: StreakData): StreakStatus {
+  if (!data.lastSessionTimestamp) return 'active';
+
+  const timeSinceLastSession = Date.now() - data.lastSessionTimestamp;
+  if (timeSinceLastSession > STREAK_TIMEOUT_MS + GRACE_PERIOD_MS) return 'lost';
+  if (timeSinceLastSession > STREAK_TIMEOUT_MS) return 'recovery';
+  return 'active';
+}
+
+export function useStreak() {
+  const [streakData, setStreakData] = useState<StreakData>(readStreakData);
+  const [status, setStatus] = useState<StreakStatus>(() => getStatus(readStreakData()));
 
   // Update status based on current time and lastSessionTimestamp
   const updateStatus = useCallback(() => {
-    if (!streakData.lastSessionTimestamp) {
-      setStatus('active');
-      return;
+    const nextStatus = getStatus(streakData);
+
+    if (nextStatus === 'lost' && streakData.currentStreak > 0) {
+      const newData = { ...streakData, currentStreak: 0 };
+      setStreakData(newData);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
     }
 
-    const now = Date.now();
-    const timeSinceLastSession = now - streakData.lastSessionTimestamp;
-
-    if (timeSinceLastSession > STREAK_TIMEOUT_MS + GRACE_PERIOD_MS) {
-      // Grace period expired, streak is lost permanently
-      if (streakData.currentStreak > 0) {
-        const newData = { ...streakData, currentStreak: 0 };
-        setStreakData(newData);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-      }
-      setStatus('lost');
-    } else if (timeSinceLastSession > STREAK_TIMEOUT_MS) {
-      // Within grace period -> recovery mode
-      setStatus('recovery');
-    } else {
-      // Within 24 hours
-      setStatus('active');
-    }
+    setStatus(nextStatus);
   }, [streakData]);
 
   // Check status periodically or when streak data changes
   useEffect(() => {
-    updateStatus();
     // Check every minute just in case the app stays open
     const interval = setInterval(updateStatus, 60000);
     return () => clearInterval(interval);

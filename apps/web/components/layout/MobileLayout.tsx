@@ -15,10 +15,10 @@ export function MobileLayout({
   backHref?: string;
 }) {
   return (
-    <div className="flex flex-col bg-white h-screen w-screen md:w-auto md:aspect-9/19.5 md:rounded-xl shadow-2xl overflow-hidden relative">
+    <div className="relative flex h-screen w-screen flex-col overflow-hidden bg-white shadow-2xl md:aspect-9/19.5 md:w-auto md:rounded-xl">
       <Header title={title} showBackButton={showBackButton} backHref={backHref} />
 
-      <main className="flex-1 overflow-y-auto w-full px-4">
+      <main className="w-full flex-1 overflow-y-auto px-4">
         {children}
       </main>
 
