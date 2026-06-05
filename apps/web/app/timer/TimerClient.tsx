@@ -19,6 +19,13 @@ type StoredConfig = {
   blockedApps?: Array<{ name: string }>;
 };
 
+const timerTutorialSlides = [
+  "Tap the timer numbers or use Set Duration to choose your total session length.",
+  "Configure blocked apps before starting so distractions stay out of reach.",
+  "Press Start Session to review your blocklist and begin focusing.",
+  "Adaptive timers split the session into focus and break blocks that grow gradually.",
+];
+
 function readBlockedApps() {
   if (typeof window === "undefined") return [];
   try {
@@ -27,6 +34,11 @@ function readBlockedApps() {
   } catch {
     return [];
   }
+}
+
+function shouldShowTimerTutorial() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("autofocus_timer_tutorial_seen") !== "1";
 }
 
 export default function Timer() {
@@ -42,7 +54,10 @@ export default function Timer() {
   const [showDurationModal, setShowDurationModal] = useState(false);
   const [showFirstTimerModal, setShowFirstTimerModal] = useState(false);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [showTimerTutorial, setShowTimerTutorial] = useState(shouldShowTimerTutorial);
+  const [tutorialIndex, setTutorialIndex] = useState(0);
   const [blockedApps] = useState<string[]>(readBlockedApps);
+  const durationSeconds = timeValueToSeconds(durationForm);
 
   const timers = useMemo(() => {
     const generated = generateAdaptiveTimers(sessionSeconds, firstFocusSeconds);
@@ -91,15 +106,29 @@ export default function Timer() {
     router.push("/focus");
   }
 
+  function dismissTimerTutorial() {
+    localStorage.setItem("autofocus_timer_tutorial_seen", "1");
+    setShowTimerTutorial(false);
+  }
+
   return (
     <MobileLayout title="Create Focus Session">
       <div className="mx-auto flex w-full max-w-[390px] flex-col pb-6 pt-5">
         <section className="rounded-[18px] bg-primary-400 px-4 py-6 text-center text-white">
-          <TimeInput
-            label="Session duration"
-            value={durationForm}
-            onChange={setDurationForm}
-          />
+          <h2 className="text-center text-[25px] font-bold text-white">Session duration</h2>
+          <button
+            type="button"
+            onClick={() => setShowDurationModal(true)}
+            className="mx-auto mt-5 block rounded-[10px] px-4 py-2 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-100"
+            aria-label="Edit session duration"
+          >
+            <span className="block text-[32px] font-bold leading-none tabular-nums text-white">
+              {formatDuration(durationSeconds)}
+            </span>
+            <span className="mt-3 block text-[13px] text-white/85">
+              Tap timer to edit duration
+            </span>
+          </button>
 
           <Button
             type="button"
@@ -189,6 +218,53 @@ export default function Timer() {
           <Button type="button" size="large" className="mt-9" onClick={saveFirstTimer}>
             Set Timer
           </Button>
+        </AppModal>
+      )}
+
+      {showTimerTutorial && (
+        <AppModal title="Create session guide" onClose={dismissTimerTutorial}>
+          <div className="mt-6 rounded-[7px] bg-primary-300 p-5 text-left text-ink">
+            <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-primary-600">
+              Step {tutorialIndex + 1} of {timerTutorialSlides.length}
+            </p>
+            <p className="mt-3 text-[18px] leading-6">
+              {timerTutorialSlides[tutorialIndex]}
+            </p>
+          </div>
+          <div className="mt-5 flex justify-center gap-2">
+            {timerTutorialSlides.map((slide) => (
+              <span
+                key={slide}
+                className={`h-2 rounded-full transition-all ${
+                  slide === timerTutorialSlides[tutorialIndex] ? "w-8 bg-white" : "w-2 bg-white/45"
+                }`}
+              />
+            ))}
+          </div>
+          <div className="mt-7 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              size="large"
+              disabled={tutorialIndex === 0}
+              onClick={() => setTutorialIndex((prev) => Math.max(0, prev - 1))}
+            >
+              Back
+            </Button>
+            <Button
+              type="button"
+              size="large"
+              onClick={() => {
+                if (tutorialIndex === timerTutorialSlides.length - 1) {
+                  dismissTimerTutorial();
+                  return;
+                }
+                setTutorialIndex((prev) => prev + 1);
+              }}
+            >
+              {tutorialIndex === timerTutorialSlides.length - 1 ? "Done" : "Next"}
+            </Button>
+          </div>
         </AppModal>
       )}
 

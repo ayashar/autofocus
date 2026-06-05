@@ -23,6 +23,7 @@ class AppColors {
 }
 
 enum AppPage {
+  onboarding,
   login,
   register,
   profileSetup,
@@ -76,9 +77,10 @@ class AutoFokusApp extends StatefulWidget {
 }
 
 class _AutoFokusAppState extends State<AutoFokusApp> {
-  AppPage page = AppPage.login;
+  AppPage page = AppPage.onboarding;
   bool loggedIn = false;
   bool guest = false;
+  bool timerTutorialSeen = false;
   String username = 'User';
   int avatarId = 1;
   int streak = 0;
@@ -204,6 +206,14 @@ class _AutoFokusAppState extends State<AutoFokusApp> {
     });
   }
 
+  void finishOnboarding() {
+    setState(() => page = AppPage.login);
+  }
+
+  void finishTimerTutorial() {
+    setState(() => timerTutorialSeen = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -218,6 +228,9 @@ class _AutoFokusAppState extends State<AutoFokusApp> {
       home: Builder(
         builder: (context) {
           return switch (page) {
+            AppPage.onboarding => OnboardingScreen(
+              onComplete: finishOnboarding,
+            ),
             AppPage.login => LoginScreen(
               onLogin: login,
               onSignUp: () => goTo(AppPage.register),
@@ -247,6 +260,8 @@ class _AutoFokusAppState extends State<AutoFokusApp> {
               timers: timers,
               sessionSeconds: sessionSeconds,
               selectedApps: blockedApps.where((app) => app.selected).toList(),
+              showTutorial: !timerTutorialSeen,
+              onTutorialDone: finishTimerTutorial,
               onSetDuration: setSessionDuration,
               onSetFirstTimer: setFirstTimer,
               onRemoveTimer: removeTimer,
@@ -460,7 +475,7 @@ class AuthShell extends StatelessWidget {
                         ...children,
                         const Spacer(flex: 3),
                         const Text(
-                          'Version 1.1.0',
+                          'Version $appVersion',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: AppColors.muted,
@@ -505,6 +520,169 @@ class BrandHeader extends StatelessWidget {
           style: TextStyle(color: AppColors.muted, fontSize: 17),
         ),
       ],
+    );
+  }
+}
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({required this.onComplete, super.key});
+
+  final VoidCallback onComplete;
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  int index = 0;
+
+  static const slides = [
+    (
+      icon: Icons.shield_outlined,
+      title: 'Stay focused',
+      body:
+          'AutoFokus helps you protect study and work time by reducing distractions from other apps.',
+    ),
+    (
+      icon: Icons.timer_outlined,
+      title: 'Create a focus session',
+      body:
+          'Choose apps to block, set your duration, then start your focus timer.',
+    ),
+    (
+      icon: Icons.auto_awesome_outlined,
+      title: 'Adaptive timer',
+      body:
+          'Your timer plan grows gradually so focus blocks can adjust to your needs.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final slide = slides[index];
+    final isFirst = index == 0;
+    final isLast = index == slides.length - 1;
+
+    return Scaffold(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 28,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Spacer(),
+                        const BrandHeader(),
+                        const SizedBox(height: 54),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 34,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary100,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 42,
+                                backgroundColor: AppColors.primary500,
+                                child: Icon(
+                                  slide.icon,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ),
+                              const SizedBox(height: 30),
+                              Text(
+                                slide.title,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: AppColors.ink,
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                slide.body,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: AppColors.ink,
+                                  fontSize: 17,
+                                  height: 1.35,
+                                ),
+                              ),
+                              const SizedBox(height: 30),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(slides.length, (
+                                  dotIndex,
+                                ) {
+                                  final active = dotIndex == index;
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    width: active ? 30 : 8,
+                                    height: 8,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: active
+                                          ? AppColors.primary500
+                                          : AppColors.primary300,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: PrimaryButton(
+                                label: 'Back',
+                                icon: Icons.arrow_back,
+                                onPressed: isFirst
+                                    ? null
+                                    : () => setState(() => index -= 1),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: PrimaryButton(
+                                label: isLast ? 'Get Started' : 'Next',
+                                icon: isLast ? null : Icons.arrow_forward,
+                                onPressed: isLast
+                                    ? widget.onComplete
+                                    : () => setState(() => index += 1),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -749,8 +927,19 @@ class ConfigureScreen extends StatefulWidget {
 }
 
 class _ConfigureScreenState extends State<ConfigureScreen> {
+  String query = '';
+
   @override
   Widget build(BuildContext context) {
+    final normalizedQuery = query.trim().toLowerCase();
+    final filteredApps = widget.apps
+        .asMap()
+        .entries
+        .where(
+          (entry) => entry.value.name.toLowerCase().contains(normalizedQuery),
+        )
+        .toList();
+
     return Scaffold(
       appBar: const AppTopBar(title: 'Configure'),
       body: SafeArea(
@@ -783,22 +972,74 @@ class _ConfigureScreenState extends State<ConfigureScreen> {
               const SizedBox(height: 28),
               Expanded(
                 child: Container(
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppColors.primary100,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: widget.apps.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 6),
-                    itemBuilder: (context, index) {
-                      final app = widget.apps[index];
-                      return BlockedAppTile(
-                        app: app,
-                        onTap: () =>
-                            setState(() => app.selected = !app.selected),
-                      );
-                    },
+                  child: Column(
+                    children: [
+                      TextField(
+                        onChanged: (value) => setState(() => query = value),
+                        decoration: InputDecoration(
+                          hintText: 'Search apps',
+                          hintStyle: const TextStyle(color: AppColors.muted),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.primary500,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary300,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary500,
+                              width: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: filteredApps.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No apps found',
+                                  style: TextStyle(
+                                    color: AppColors.muted,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                itemCount: filteredApps.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 6),
+                                itemBuilder: (context, filteredIndex) {
+                                  final entry = filteredApps[filteredIndex];
+                                  final app = entry.value;
+                                  return BlockedAppTile(
+                                    app: app,
+                                    onTap: () => setState(
+                                      () => widget.apps[entry.key].selected =
+                                          !widget.apps[entry.key].selected,
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -900,6 +1141,8 @@ class TimerSetupScreen extends StatefulWidget {
     required this.timers,
     required this.sessionSeconds,
     required this.selectedApps,
+    required this.showTutorial,
+    required this.onTutorialDone,
     required this.onSetDuration,
     required this.onSetFirstTimer,
     required this.onRemoveTimer,
@@ -913,6 +1156,8 @@ class TimerSetupScreen extends StatefulWidget {
   final List<FocusTimer> timers;
   final int sessionSeconds;
   final List<BlockedApp> selectedApps;
+  final bool showTutorial;
+  final VoidCallback onTutorialDone;
   final void Function(int seconds) onSetDuration;
   final void Function(int seconds) onSetFirstTimer;
   final void Function(int index) onRemoveTimer;
@@ -927,6 +1172,21 @@ class TimerSetupScreen extends StatefulWidget {
 
 class _TimerSetupScreenState extends State<TimerSetupScreen> {
   TimeParts durationParts = TimeParts.zero();
+
+  static const tutorialSlides = [
+    'Tap the timer numbers or use Set Duration to choose your total session length.',
+    'Choose the apps you want to block during your focus session.',
+    'Press Start Session to review your blocklist and begin focusing.',
+    'Adaptive timer splits your session into focus and break blocks that grow gradually.',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.showTutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => openTutorialDialog());
+    }
+  }
 
   Future<void> openDurationDialog() async {
     final result = await showDialog<int>(
@@ -950,6 +1210,15 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
       ),
     );
     if (result != null && result > 0) widget.onSetFirstTimer(result);
+  }
+
+  Future<void> openTutorialDialog() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => TutorialDialog(slides: tutorialSlides),
+    );
+    widget.onTutorialDone();
   }
 
   Future<void> confirmStart() async {
@@ -1051,7 +1320,30 @@ class _TimerSetupScreenState extends State<TimerSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  TimeDisplay(parts: durationParts),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: openDurationDialog,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        children: [
+                          TimeDisplay(parts: durationParts),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Tap timer to edit duration',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 28),
                   PrimaryButton(
                     label: 'Set Duration',
@@ -1828,6 +2120,100 @@ class AppDialog extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class TutorialDialog extends StatefulWidget {
+  const TutorialDialog({required this.slides, super.key});
+
+  final List<String> slides;
+
+  @override
+  State<TutorialDialog> createState() => _TutorialDialogState();
+}
+
+class _TutorialDialogState extends State<TutorialDialog> {
+  int index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFirst = index == 0;
+    final isLast = index == widget.slides.length - 1;
+
+    return AppDialog(
+      title: 'Create session guide',
+      children: [
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppColors.primary300,
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Step ${index + 1} of ${widget.slides.length}',
+                style: const TextStyle(
+                  color: AppColors.primary600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.slides[index],
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 18,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.slides.length, (dotIndex) {
+            final active = dotIndex == index;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: active ? 28 : 8,
+              height: 8,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: active ? Colors.white : Colors.white54,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: PrimaryButton(
+                label: 'Back',
+                onPressed: isFirst ? null : () => setState(() => index -= 1),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: PrimaryButton(
+                label: isLast ? 'Done' : 'Next',
+                onPressed: isLast
+                    ? () => Navigator.pop(context)
+                    : () => setState(() => index += 1),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

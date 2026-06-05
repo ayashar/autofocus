@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Onboarding } from "@/components/Onboarding";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 
+function shouldShowOnboarding() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("autofocus_onboarding_seen") !== "1";
+}
+
 export default function Home() {
   const router = useRouter();
+  const [showOnboarding, setShowOnboarding] = useState(shouldShowOnboarding);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +42,17 @@ export default function Home() {
   function handleSkip() {
     localStorage.setItem("autofocus_auth", JSON.stringify({ loggedIn: false, mode: "guest" }));
     router.push("/register/profile/configuration?guest=1");
+  }
+
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        onComplete={() => {
+          localStorage.setItem("autofocus_onboarding_seen", "1");
+          setShowOnboarding(false);
+        }}
+      />
+    );
   }
 
   return (

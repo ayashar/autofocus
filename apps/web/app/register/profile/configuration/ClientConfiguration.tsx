@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { Check, ChevronLeft } from "lucide-react";
+import { Check, ChevronLeft, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,11 +9,16 @@ import { blockedAppCatalog } from "@/lib/blockedApps";
 
 export default function ClientConfiguration() {
   const [apps, setApps] = useState(blockedAppCatalog);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const search = useSearchParams();
   const userId = search?.get("userId");
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredApps = apps
+    .map((app, index) => ({ app, index }))
+    .filter(({ app }) => app.name.toLowerCase().includes(normalizedQuery));
 
   function toggleApp(index: number) {
     setApps((prev) => {
@@ -58,30 +63,51 @@ export default function ClientConfiguration() {
         </section>
 
         <section className="mt-8 min-h-[520px] rounded-[6px] bg-primary-100 px-2 py-2 pr-1 shadow-inner">
-          <div className="max-h-[540px] space-y-2 overflow-y-auto pr-1">
-            {apps.map((app, idx) => (
-              <button
-                key={app.name}
-                type="button"
-                onClick={() => toggleApp(idx)}
-                className={`flex h-[58px] w-full items-center justify-between rounded-[5px] px-3 text-left transition-transform active:scale-[0.99] ${
-                  app.active ? "bg-[#AEBFA5]" : "bg-primary-100"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-bold text-white shadow-sm ${app.accent}`}
-                  >
-                    {app.label}
-                  </div>
-                  <span className="text-[18px] text-ink">{app.name}</span>
-                </div>
+          <label className="relative mb-2 block pr-1" htmlFor="blocked-app-search">
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary-500"
+            />
+            <input
+              id="blocked-app-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              type="search"
+              placeholder="Search apps"
+              className="h-11 w-full rounded-[6px] border border-primary-200 bg-white pl-10 pr-3 text-[15px] text-ink outline-none placeholder:text-muted focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            />
+          </label>
 
-                <div className="flex h-8 w-8 items-center justify-center rounded-[4px] border-2 border-primary-500 bg-transparent">
-                  {app.active && <Check size={22} strokeWidth={2.4} className="text-primary-500" />}
-                </div>
-              </button>
-            ))}
+          <div className="max-h-[488px] space-y-2 overflow-y-auto pr-1">
+            {filteredApps.length === 0 ? (
+              <div className="flex min-h-[220px] items-center justify-center rounded-[5px] bg-white/55 px-4 text-center text-[15px] font-medium text-muted">
+                No apps found
+              </div>
+            ) : (
+              filteredApps.map(({ app, index }) => (
+                <button
+                  key={app.name}
+                  type="button"
+                  onClick={() => toggleApp(index)}
+                  className={`flex h-[58px] w-full items-center justify-between rounded-[5px] px-3 text-left transition-transform active:scale-[0.99] ${
+                    app.active ? "bg-[#AEBFA5]" : "bg-primary-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-bold text-white shadow-sm ${app.accent}`}
+                    >
+                      {app.label}
+                    </div>
+                    <span className="text-[18px] text-ink">{app.name}</span>
+                  </div>
+
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[4px] border-2 border-primary-500 bg-transparent">
+                    {app.active && <Check size={22} strokeWidth={2.4} className="text-primary-500" />}
+                  </div>
+                </button>
+              ))
+            )}
           </div>
         </section>
 
